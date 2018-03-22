@@ -9,10 +9,10 @@ import json
 linbocmdPath = "/var/linbo/linbocmd"
 workstations = "/etc/linuxmuster/workstations"
 # Optional config for Mattermost
-mattermostUrl = "https://chat.cdsc.ac.th/hooks/4weetj1pzpd6ukq1z31diwds1a"
+mattermostUrl = ""
 channel = "#monitoring"
 botName = "Linbo"
-icon_url = "http://aqi.cdsc.ac.th/images/lmn.png"
+icon_url = ""
 
 # Read workstations for hostname lookup
 workstationsFile = open(workstations, "r")
