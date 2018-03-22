@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# This script reads the configuration files "holidays.conf" and "exceptions.conf".
+# and ends with error code 0 if the call is on a school day.
+# otherwise the script ends with error code 99
+# the error codes are configurable below
+#
+# based on https://github.com/anschuetz/linuxmuster/blob/master/schultag/ist-heute-schultag
+# Jesko Anschütz <jesko.anschuetz@linuxmuster.net>, January 2012
+# translated and updated Stephan Tetzel <stephan@zefanjas.de>, March 2018
+
+########### CONFIG START ###############
+
+# Where are the config files?
+# Path with a slash at the end
+config_path="/etc/school-day/"
+
+# Config file names
+# filenames without path and slash
+holidays_conf="holidays.conf"
+exceptions_conf="exceptions.conf"
+
+# What days of the week are always off school?
+# Space-separated list of local short names of days
+weeksdays_no_school="Sa Su"
+
+# What format is the data in the config files? (See  'man date')
+dateformat="%Y%m%d"
+
+# Error Codes
+exitcode_holidays=99
+exitcode_weekend=98
+exitcode_school_day=0
+
+########### CONFIG END ################
+
+# Let's check if the config files exist and abort if necessary.
+[ ! -e $config_path$holidays_conf ] && echo "$config_path$holidays_conf fehlt oder ist nicht lesbar!"
+[ ! -e $config_path$exceptions_conf ] && echo "Config-Datei $config_path$exceptions_conf fehlt oder ist nicht lesbar!"
+
+# Check if today is a school day
+for e in `awk '{print $1}' $config_path$exceptions_conf`;
+do
+  if [ "$e" == `date +$dateformat` ]
+  then
+	exit $exitcode_school_day
+  fi
+done
+
+for w in $weeksdays_no_school;
+do
+  if [ "$w" == `date +%a` ]
+  then
+	exit $exitcode_weekend
+  fi
+done
+
+for h in `awk '{print $1}' $config_path$holidays_conf`;
+do
+	if [ "$h" != "#" ]
+	then
+    if [[ $h = *"-"* ]]
+    then
+  		IFS="-"
+  		set -- $h
+  		if [ $1 -le `date +$dateformat` ] && [ $2 -ge `date +$dateformat` ]
+  		then
+  			exit $exitcode_holidays
+  		fi
+    else
+      if [ "$h" == `date +$dateformat` ]
+      then
+  			exit $exitcode_holidays
+  		fi
+    fi
+
+	fi
+done
+exit 0
