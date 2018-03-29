@@ -17,8 +17,8 @@ Best is to run the script an hour after the `linbo-remote` command to give enoug
 Your crontab may look like that:
 
 ```
-0 6 * * * linbo-remote -g group1 -w 0 -p sync:1,halt
-0 7 * * * check-offline-hosts
+0 6 * * * /usr/sbin/linbo-remote -g group1 -w 0 -p sync:1,halt
+0 7 * * * /usr/sbin/check-offline-hosts
 ```
 Is recommend to run this together with [`is-today-school-day`](https://github.com/cdscacth/linuxmuster-scripts/tree/master/school-day) so you only sync your computers on school days. Save energy :)
 
