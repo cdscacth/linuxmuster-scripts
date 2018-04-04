@@ -2,6 +2,7 @@
 # wake hosts if they are in S4 / Suspend-Mode
 echo "Shutdown all hosts in Linbo..."
 linbo-remote -r a103 -c halt
+linbo-remote -g compaq -c halt
 echo "Wake hosts that are in suspend mode..."
 linbo-remote -r a103 -w 0
 # wait for hosts to get an IP
@@ -16,4 +17,6 @@ do
       ssh -o StrictHostKeyChecking=no $HOST shutdown -h now >/dev/null
   fi
 done
+# Shutdown all hosts we accidently waked up to Linbo
+linbo-remote -r a103 -c halt
 echo "Done"
