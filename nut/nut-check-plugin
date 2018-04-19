@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if which upsc > /dev/null 2>&1 ; then
+    echo '<<<nut>>>'
+    for ups in $(upsc -l)
+    do
+	    upsc $ups| sed "s,^,$ups ,"
+	    COUNTER=0
+            for slave in $(upsc -c $ups)
+            do
+                    COUNTER=$((COUNTER+1))
+                    printf "%s nut.slave%d %s\n" "$ups" "$COUNTER" "$slave"
+            done
+    done
+fi
+
