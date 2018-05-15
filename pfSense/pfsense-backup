@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#
+# A script to backup your pfSense to your favorite cloudstorage with Rclone.
+# Author: Stephan Tetzel
+#
+# Settings
+
+# The target bucket or container in your Rclone cloudstorage
+RCLONETARGETDIR="pfsense"
+# Optional Rclone settings.
+RCLONEOPTIONS=""
+# Rclone target cloud used in your rlcone.conf
+RCLONETARGET=""
+# Directory were local images are stored before upload
+WORKDIR="/tmp/pfsense"
+
+# Cleanup when exiting unclean
+trap "cleanup; echo 'Unclean exit'" INT SIGHUP SIGINT SIGTERM
+
+BACKUPDATE=$(date +"%Y-%m-%d")
+RCLONE=$(which rclone)
+
+if [ -z "$RCLONE" ]; then
+    echo "RCLONE command NOT found";
+    exit 1 ;
+fi
+
+# Functions
+lecho () {
+   logger "lxdbackup: $LXCCONTAINER - $@"
+   echo $@
+}
+
+# Checking backupdate
+check_backupdate () {
+    if [ -z "$BACKUPDATE" ]; then
+        lecho "Could not determine backupdate: $BACKUPDATE"
+        return 1
+    fi
+}
+
+# Main backup script
+main () {
+    if [ ! -d "$WORKDIR" ]; then
+        mkdir $WORKDIR && cd $WORKDIR
+        lecho "Backup directory: $WORKDIR created for temporary backup storage"
+    fi
+
+    # Change to the workdir for all the file store operations
+    cd $WORKDIR
+
+    #get config from firewall
+    scp backup@192.168.1.1:/cf/conf/config.xml $BACKUPDATE-config.xml
+
+    # Create the cloudstore backup if does not exist.
+    if $RCLONE mkdir $RCLONETARGET:$RCLONETARGETDIR; then
+        lecho "Target directory: Succesfully created the $RCLONETARGET:$RCLONETARGETDIR directory"
+    else
+        lecho "Target directory: Could not create the $RCLONETARGET:$RCLONETARGETDIR directory"
+        cleanup
+        return 1
+    fi
+
+    # Upload the container image to the cloudstore backup.
+    if $RCLONE $RCLONEOPTIONS copy $BACKUPDATE-config.xml $RCLONETARGET:$RCLONETARGETDIR/; then
+        lecho "Upload: Succesfully uploaded $BACKUPDATE-config.xml"
+        rm $BACKUPDATE-config.xml
+    else
+        lecho "Could not upload config file!"
+        return 1
+    fi
+}
+
+main
+exit $?
